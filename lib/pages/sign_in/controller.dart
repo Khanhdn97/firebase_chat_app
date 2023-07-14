@@ -1,28 +1,30 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:login_firebase/pages/sign_in/state.dart';
+import 'package:login_firebase/auth.dart';
+import 'package:login_firebase/store/user.dart';
+
 class SignInController extends GetxController{
   SignInController();
   final title = 'SignIn page';
-  final state = SignInState();
+  final Auth auth = Auth();
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      'openid'
-    ]
   );
   Future<void> handleSignIn(String type) async {
     try{
       if(type == 'phone number'){
 
       }else if(type == 'google'){
-          var user = await _googleSignIn.signIn();
+          final googleAccount = await _googleSignIn.signIn();
+          final googleAuth = await googleAccount?.authentication;
+          final credential = GoogleAuthProvider.credential(accessToken: googleAuth?.accessToken);
+          await auth.signInWithCredential(credential: credential);
+          final user = auth.currentUser?.providerData[0];
           if(user != null){
-            String? displayName = user.displayName;
-            String email = user.email;
-            String id = user.id;
-            String photoUrl = user.photoUrl??"assets/icons/google.png";
-            print(displayName);
+            UserStore.to.saveProfile(user: user);
+            Get.offAllNamed('/message');
           }
       }else{
 
@@ -32,6 +34,9 @@ class SignInController extends GetxController{
         e.printError();
       }
     }
+  }
+  asyncPostAllData(){
+
   }
   @override
   void onReady() {
